@@ -58,15 +58,20 @@ function displayResults(hits) {
     existingContainer.remove();
   }
 
-  // Create a container for the table and the button
+  // Create a container for the results
   const resultsContainer = document.createElement('div');
   resultsContainer.id = 'results-container';
-  resultsContainer.className = 'flex flex-col items-center justify-center mt-8';
+  resultsContainer.className = 'flex flex-col items-center justify-center w-full';
+
+  // Create and append the number of references text
+  const numReferences = document.createElement('div');
+  numReferences.className = 'text-lg font-semibold my-4';
+  numReferences.textContent = `Number of References: ${hits.length}`;
+  resultsContainer.appendChild(numReferences);
 
   // Create table and table headers
   const table = document.createElement('table');
-  table.id = 'search-results';
-  table.className = 'min-w-full divide-y divide-gray-200';
+  table.className = 'min-w-full divide-y divide-gray-200 shadow overflow-hidden border-b border-gray-200 sm:rounded-lg';
   const thead = document.createElement('thead');
   thead.className = 'bg-gray-50';
   const trHead = document.createElement('tr');
@@ -84,38 +89,33 @@ function displayResults(hits) {
     const tr = document.createElement('tr');
     const td = document.createElement('td');
     td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500';
-    td.textContent = hit.reference_catalogue;
+    td.textContent = hit.reference_catalogue; // Displaying reference_catalogue attribute
     tr.appendChild(td);
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
 
-  // Append the table to the resultsContainer
+  // Append table to the results container
   resultsContainer.appendChild(table);
 
-  // Create a text node for the number of references
-  const numReferences = document.createElement('div');
-  numReferences.className = 'text-lg font-semibold mb-4';
-  numReferences.textContent = `Number of References: ${hits.length}`;
-  resultsContainer.appendChild(numReferences);
-
-  // Add or update download button
+  // Add or update the download button
   let downloadButton = document.getElementById('download-csv');
   if (!downloadButton) {
     downloadButton = document.createElement('button');
     downloadButton.id = 'download-csv';
     downloadButton.textContent = 'Download CSV';
-    downloadButton.className = 'mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline';
-    resultsContainer.appendChild(downloadButton);
-  } else {
-    // If the button already exists, just make sure it's in the right place
+    downloadButton.className = 'mt-4 mb-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition ease-in-out duration-150';
     resultsContainer.appendChild(downloadButton);
   }
   downloadButton.onclick = () => downloadCSV(hits.filter(hit => hit.reference_catalogue));
 
-  // Append the resultsContainer to the body
+  // Append the results container to the body
   document.body.appendChild(resultsContainer);
+
+  // Smoothly scroll to the results container
+  resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+
 
 function downloadCSV(hits) {
   try {
