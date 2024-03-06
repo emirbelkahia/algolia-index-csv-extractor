@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algolia Configuration</title>
+    <!-- Include Tailwind CSS from CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/algoliasearch/dist/algoliasearch-lite.umd.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  document.getElementById('algolia-form').addEventListener('submit', performSearch);
+});
+
+function performSearch(event) {
+  event.preventDefault();
+  console.log("Form submission intercepted. Initializing Algolia search...");
+
+  const applicationId = document.getElementById('application-id').value;
+  const apiKey = document.getElementById('api-key').value;
+  const indexName = document.getElementById('index-name').value;
+  const ruleContextInput = document.getElementById('rule-context').value; // Get the context value from the input
+  const ruleContexts = ruleContextInput ? [ruleContextInput] : []; // Convert to an array of strings
+
+  if (applicationId && apiKey && indexName) {
+    console.log("Algolia credentials and index name fetched successfully.");
+
+    const client = algoliasearch(applicationId, apiKey);
+    const index = client.initIndex(indexName);
+
+    // Adjusting hitsPerPage to 1000
+    index.search('', { 
+      ruleContexts: ruleContexts,
+      hitsPerPage: 1000 // Set maximum hits per page
+    })
+    .then(({ hits }) => {
+      console.log("Search completed successfully.");
+      if (hits.length) {
+        console.log(`Displaying ${hits.length} results.`);
+        displayResults(hits);
+      } else {
+        console.log("No results found.");
+      }
+    })
+    .catch(error => {
+      console.error("Search failed:", error.message);
+    });
+  } else {
+    console.error("Algolia credentials or index name missing.");
+  }
+}
+
+function displayResults(hits) {
+  // Clear previous results
+  const existingContainer = document.getElementById('results-container');
+  if (existingContainer) {
+    existingContainer.remove();
+  }
+
+  // Create a container for the table and the button
+  const resultsContainer = document.createElement('div');
+  resultsContainer.id = 'results-container';
+  resultsContainer.className = 'flex flex-col items-center justify-center mt-8';
+
+  // Create table and table headers
+  const table = document.createElement('table');
+  table.id = 'search-results';
+  table.className = 'min-w-full divide-y divide-gray-200';
+  const thead = document.createElement('thead');
+  thead.className = 'bg-gray-50';
+  const trHead = document.createElement('tr');
+  const th = document.createElement('th');
+  th.textContent = 'Reference Catalogue';
+  th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+  trHead.appendChild(th);
+  thead.appendChild(trHead);
+  table.appendChild(thead);
+
+  // Create table body
+  const tbody = document.createElement('tbody');
+  tbody.className = 'bg-white divide-y divide-gray-200';
+  hits.forEach(hit => {
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500';
+    td.textContent = hit.reference_catalogue;
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+
+  // Append the table to the resultsContainer
+  resultsContainer.appendChild(table);
+
+  // Create a text node for the number of references
+  const numReferences = document.createElement('div');
+  numReferences.className = 'text-lg font-semibold mb-4';
+  numReferences.textContent = `Number of References: ${hits.length}`;
+  resultsContainer.appendChild(numReferences);
+
+  // Add or update download button
+  let downloadButton = document.getElementById('download-csv');
+  if (!downloadButton) {
+    downloadButton = document.createElement('button');
+    downloadButton.id = 'download-csv';
+    downloadButton.textContent = 'Download CSV';
+    downloadButton.className = 'mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline';
+    resultsContainer.appendChild(downloadButton);
+  } else {
+    // If the button already exists, just make sure it's in the right place
+    resultsContainer.appendChild(downloadButton);
+  }
+  downloadButton.onclick = () => downloadCSV(hits.filter(hit => hit.reference_catalogue));
+
+  // Append the resultsContainer to the body
+  document.body.appendChild(resultsContainer);
+}
+
+function downloadCSV(hits) {
+  try {
+    // Get the current date and time
+    const now = new Date();
+    const dateString = now.toISOString().split('T')[0]; // YYYY-MM-DD format
+    const timeString = now.toTimeString().split(' ')[0].replace(/:/g, '-'); // HH-MM-SS format
+    const ruleContext = document.getElementById('rule-context').value; // Get the context from the form
+    const filename = `References_${dateString}_${timeString}_${ruleContext}.csv`;
+
+    // Generate CSV content
+    const csvContent = "data:text/csv;charset=utf-8," + hits.map(e => 
+      `"${e.reference_catalogue}"` // Assuming reference_catalogue is the required data
+    ).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", filename);
+    document.body.appendChild(link); // Required for FF
+    link.click();
+    console.log("CSV download initiated with filename: " + filename);
+  } catch (error) {
+    console.error("Failed to generate or download CSV:", error.message);
+  }
+}
+
+</script>
+
+
+</head>
+<body class="bg-gray-100">
+
+<div class="min-h-screen flex items-center justify-center">
+    <div class="max-w-md w-full space-y-8">
+        <div>
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                Enter Algolia Configuration
+            </h2>
+        </div>
+        <form class="mt-8 space-y-6" id="algolia-form" onsubmit="performSearch(event)">
+            <input type="hidden" name="remember" value="true">
+            <div class="rounded-md shadow-sm -space-y-px">
+                <div>
+                    <label for="application-id" class="sr-only">Application ID</label>
+                    <input id="application-id" name="application_id" type="text" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Application ID">
+                </div>
+                <div>
+                    <label for="api-key" class="sr-only">API Key</label>
+                    <input id="api-key" name="api_key" type="text" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="API Key">
+                </div>
+                <div>
+                    <label for="index-name" class="sr-only">Index Name</label>
+                    <input id="index-name" name="index_name" type="text" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Index Name">
+                </div>
+                <div>
+                    <label for="rule-context" class="sr-only">Rule Context</label>
+                    <input id="rule-context" name="rule_context" type="text" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Rule Context">
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Submit
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>
