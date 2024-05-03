@@ -20,32 +20,41 @@ function performSearch(event) {
   const applicationId = document.getElementById('application-id').value;
   const apiKey = document.getElementById('api-key').value;
   const indexName = document.getElementById('index-name').value;
-  const ruleContextInput = document.getElementById('rule-context').value; // Get the context value from the input
-  const ruleContexts = ruleContextInput ? [ruleContextInput] : []; // Convert to an array of strings
+  const ruleContextInput = document.getElementById('rule-context').value; 
+  const ruleContexts = ruleContextInput ? [ruleContextInput] : []; 
 
   if (applicationId && apiKey && indexName) {
     console.log("Algolia credentials and index name fetched successfully.");
-
     const client = algoliasearch(applicationId, apiKey);
     const index = client.initIndex(indexName);
 
-    // Adjusting hitsPerPage to 1000
-    index.search('', { 
-      ruleContexts: ruleContexts,
-      hitsPerPage: 1000 // Set maximum hits per page
-    })
-    .then(({ hits }) => {
-      console.log("Search completed successfully.");
-      if (hits.length) {
-        console.log(`Displaying ${hits.length} results.`);
-        displayResults(hits);
-      } else {
-        console.log("No results found.");
-      }
-    })
-    .catch(error => {
-      console.error("Search failed:", error.message);
-    });
+    let allHits = [];
+    const maxPages = 10;
+    let page = 0;
+
+    const fetchPage = () => {
+      index.search('', { 
+        ruleContexts: ruleContexts,
+        hitsPerPage: 1000,
+        page: page
+      })
+      .then(({ hits, nbPages }) => {
+        console.log(`Page ${page + 1} search completed with ${hits.length} results.`);
+        allHits = allHits.concat(hits);
+        if (page < nbPages - 1 && page < maxPages - 1) {
+          page++;
+          fetchPage(); // Fetch next page
+        } else {
+          console.log("All pages fetched or max pages limit reached.");
+          displayResults(allHits);
+        }
+      })
+      .catch(error => {
+        console.error("Search failed:", error.message);
+      });
+    };
+
+    fetchPage(); // Start fetching pages
   } else {
     console.error("Algolia credentials or index name missing.");
   }
