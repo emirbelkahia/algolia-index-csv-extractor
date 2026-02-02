@@ -6,155 +6,6 @@
     <title>Algolia Index CSV Extractor</title>
     <!-- Include Tailwind CSS from CDN -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/algoliasearch@3.35.1/dist/algoliasearch.min.js"></script>
-
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-  document.getElementById('algolia-form').addEventListener('submit', performSearch);
-});
-
-function performSearch(event) {
-  event.preventDefault();
-  console.log("Form submission intercepted. Initializing Algolia search...");
-
-  const applicationId = document.getElementById('application-id').value;
-  const apiKey = document.getElementById('api-key').value;
-  const indexName = document.getElementById('index-name').value;
-  const ruleContextInput = document.getElementById('rule-context').value;
-  const ruleContexts = ruleContextInput ? [ruleContextInput] : [];
-  const attributeName = document.getElementById('attribute-name').value; 
-
-  if (applicationId && apiKey && indexName) {
-    console.log("Algolia credentials and index name fetched successfully.");
-    const client = algoliasearch(applicationId, apiKey);
-    const index = client.initIndex(indexName);
-
-    let allHits = [];
-    const maxPages = 10;
-    let page = 0;
-
-    const fetchPage = () => {
-      index.search('', { 
-        ruleContexts: ruleContexts,
-        hitsPerPage: 1000,
-        page: page
-      })
-      .then(({ hits, nbPages }) => {
-        console.log(`Page ${page + 1} search completed with ${hits.length} results.`);
-        allHits = allHits.concat(hits);
-        if (page < nbPages - 1 && page < maxPages - 1) {
-          page++;
-          fetchPage(); // Fetch next page
-        } else {
-          console.log("All pages fetched or max pages limit reached.");
-          displayResults(allHits, attributeName);
-        }
-      })
-      .catch(error => {
-        console.error("Search failed:", error.message);
-      });
-    };
-
-    fetchPage(); // Start fetching pages
-  } else {
-    console.error("Algolia credentials or index name missing.");
-  }
-}
-
-function displayResults(hits, attributeName) {
-  // Clear previous results
-  const existingContainer = document.getElementById('results-container');
-  if (existingContainer) {
-    existingContainer.remove();
-  }
-
-  // Create a container for the results
-  const resultsContainer = document.createElement('div');
-  resultsContainer.id = 'results-container';
-  resultsContainer.className = 'flex flex-col items-center justify-center w-full';
-
-  // Create and append the number of hits text
-  const numReferences = document.createElement('div');
-  numReferences.className = 'text-lg font-semibold my-4';
-  numReferences.textContent = `Number of Hits: ${hits.length}`;
-  resultsContainer.appendChild(numReferences);
-
-  // Create table and table headers
-  const table = document.createElement('table');
-  table.className = 'min-w-full divide-y divide-gray-200 shadow overflow-hidden border-b border-gray-200 sm:rounded-lg';
-  const thead = document.createElement('thead');
-  thead.className = 'bg-gray-50';
-  const trHead = document.createElement('tr');
-  const th = document.createElement('th');
-  th.textContent = attributeName;
-  th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
-  trHead.appendChild(th);
-  thead.appendChild(trHead);
-  table.appendChild(thead);
-
-  // Create table body
-  const tbody = document.createElement('tbody');
-  tbody.className = 'bg-white divide-y divide-gray-200';
-  hits.forEach(hit => {
-    const tr = document.createElement('tr');
-    const td = document.createElement('td');
-    td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500';
-    td.textContent = hit[attributeName] || '(empty)'; // Display attribute dynamically
-    tr.appendChild(td);
-    tbody.appendChild(tr);
-  });
-  table.appendChild(tbody);
-
-  // Append table to the results container
-  resultsContainer.appendChild(table);
-
-  // Add or update the download button
-  let downloadButton = document.getElementById('download-csv');
-  if (!downloadButton) {
-    downloadButton = document.createElement('button');
-    downloadButton.id = 'download-csv';
-    downloadButton.textContent = 'Download CSV';
-    downloadButton.className = 'mt-4 mb-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition ease-in-out duration-150';
-    resultsContainer.appendChild(downloadButton);
-  }
-  downloadButton.onclick = () => downloadCSV(hits, attributeName);
-
-  // Append the results container to the body
-  document.body.appendChild(resultsContainer);
-
-  // Smoothly scroll to the results container
-  resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-
-function downloadCSV(hits, attributeName) {
-  try {
-    // Get the current date and time
-    const now = new Date();
-    const dateString = now.toISOString().split('T')[0]; // YYYY-MM-DD format
-    const timeString = now.toTimeString().split(' ')[0].replace(/:/g, '-'); // HH-MM-SS format
-    const ruleContext = document.getElementById('rule-context').value || 'no-context';
-    const filename = `algolia_export_${attributeName}_${dateString}_${timeString}_${ruleContext}.csv`;
-
-    // Generate CSV content
-    const csvContent = "data:text/csv;charset=utf-8," + hits.map(e =>
-      `"${e[attributeName] || ''}"`
-    ).join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", filename);
-    document.body.appendChild(link); // Required for FF
-    link.click();
-    console.log("CSV download initiated with filename: " + filename);
-  } catch (error) {
-    console.error("Failed to generate or download CSV:", error.message);
-  }
-}
-
-</script>
-
-
 </head>
 <body class="bg-gray-100 py-8">
 
@@ -225,6 +76,134 @@ function downloadCSV(hits, attributeName) {
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/algoliasearch@3.35.1/dist/algoliasearch.min.js"></script>
+<script>
+console.log('Script loaded!');
+console.log('algoliasearch available?', typeof algoliasearch);
+
+document.getElementById('algolia-form').addEventListener('submit', function(event) {
+  event.preventDefault();
+  console.log("Form submission intercepted!");
+
+  const applicationId = document.getElementById('application-id').value;
+  const apiKey = document.getElementById('api-key').value;
+  const indexName = document.getElementById('index-name').value;
+  const ruleContextInput = document.getElementById('rule-context').value;
+  const ruleContexts = ruleContextInput ? [ruleContextInput] : [];
+  const attributeName = document.getElementById('attribute-name').value;
+
+  console.log('Values:', { applicationId, apiKey, indexName, attributeName });
+
+  if (!applicationId || !apiKey || !indexName || !attributeName) {
+    alert('Please fill in all required fields');
+    return;
+  }
+
+  const client = algoliasearch(applicationId, apiKey);
+  const index = client.initIndex(indexName);
+
+  let allHits = [];
+  const maxPages = 10;
+  let page = 0;
+
+  const fetchPage = () => {
+    console.log(`Fetching page ${page + 1}...`);
+    index.search('', {
+      ruleContexts: ruleContexts,
+      hitsPerPage: 1000,
+      page: page
+    })
+    .then(({ hits, nbPages }) => {
+      console.log(`Page ${page + 1} completed: ${hits.length} hits`);
+      allHits = allHits.concat(hits);
+      if (page < nbPages - 1 && page < maxPages - 1) {
+        page++;
+        fetchPage();
+      } else {
+        console.log(`Total hits: ${allHits.length}`);
+        displayResults(allHits, attributeName);
+      }
+    })
+    .catch(error => {
+      console.error("Search failed:", error);
+      alert('Search failed: ' + error.message);
+    });
+  };
+
+  fetchPage();
+});
+
+function displayResults(hits, attributeName) {
+  const existingContainer = document.getElementById('results-container');
+  if (existingContainer) {
+    existingContainer.remove();
+  }
+
+  const resultsContainer = document.createElement('div');
+  resultsContainer.id = 'results-container';
+  resultsContainer.className = 'flex flex-col items-center justify-center w-full mt-8';
+
+  const numReferences = document.createElement('div');
+  numReferences.className = 'text-lg font-semibold my-4';
+  numReferences.textContent = `Number of Hits: ${hits.length}`;
+  resultsContainer.appendChild(numReferences);
+
+  const table = document.createElement('table');
+  table.className = 'min-w-full divide-y divide-gray-200 shadow overflow-hidden border-b border-gray-200 sm:rounded-lg';
+  const thead = document.createElement('thead');
+  thead.className = 'bg-gray-50';
+  const trHead = document.createElement('tr');
+  const th = document.createElement('th');
+  th.textContent = attributeName;
+  th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+  trHead.appendChild(th);
+  thead.appendChild(trHead);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  tbody.className = 'bg-white divide-y divide-gray-200';
+  hits.forEach(hit => {
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500';
+    td.textContent = hit[attributeName] || '(empty)';
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+
+  resultsContainer.appendChild(table);
+
+  const downloadButton = document.createElement('button');
+  downloadButton.textContent = 'Download CSV';
+  downloadButton.className = 'mt-4 mb-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition ease-in-out duration-150';
+  downloadButton.onclick = () => downloadCSV(hits, attributeName);
+  resultsContainer.appendChild(downloadButton);
+
+  document.body.appendChild(resultsContainer);
+  resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function downloadCSV(hits, attributeName) {
+  const now = new Date();
+  const dateString = now.toISOString().split('T')[0];
+  const timeString = now.toTimeString().split(' ')[0].replace(/:/g, '-');
+  const ruleContext = document.getElementById('rule-context').value || 'no-context';
+  const filename = `algolia_export_${attributeName}_${dateString}_${timeString}_${ruleContext}.csv`;
+
+  const csvContent = "data:text/csv;charset=utf-8," + hits.map(e =>
+    `"${e[attributeName] || ''}"`
+  ).join("\n");
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", filename);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+</script>
 
 </body>
 </html>
