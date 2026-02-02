@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Algolia Configuration</title>
+    <title>Algolia Index CSV Extractor</title>
     <!-- Include Tailwind CSS from CDN -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/algoliasearch/dist/algoliasearch.umd.min.js"></script>
@@ -20,8 +20,9 @@ function performSearch(event) {
   const applicationId = document.getElementById('application-id').value;
   const apiKey = document.getElementById('api-key').value;
   const indexName = document.getElementById('index-name').value;
-  const ruleContextInput = document.getElementById('rule-context').value; 
-  const ruleContexts = ruleContextInput ? [ruleContextInput] : []; 
+  const ruleContextInput = document.getElementById('rule-context').value;
+  const ruleContexts = ruleContextInput ? [ruleContextInput] : [];
+  const attributeName = document.getElementById('attribute-name').value; 
 
   if (applicationId && apiKey && indexName) {
     console.log("Algolia credentials and index name fetched successfully.");
@@ -46,7 +47,7 @@ function performSearch(event) {
           fetchPage(); // Fetch next page
         } else {
           console.log("All pages fetched or max pages limit reached.");
-          displayResults(allHits);
+          displayResults(allHits, attributeName);
         }
       })
       .catch(error => {
@@ -60,7 +61,7 @@ function performSearch(event) {
   }
 }
 
-function displayResults(hits) {
+function displayResults(hits, attributeName) {
   // Clear previous results
   const existingContainer = document.getElementById('results-container');
   if (existingContainer) {
@@ -72,10 +73,10 @@ function displayResults(hits) {
   resultsContainer.id = 'results-container';
   resultsContainer.className = 'flex flex-col items-center justify-center w-full';
 
-  // Create and append the number of references text
+  // Create and append the number of hits text
   const numReferences = document.createElement('div');
   numReferences.className = 'text-lg font-semibold my-4';
-  numReferences.textContent = `Number of References: ${hits.length}`;
+  numReferences.textContent = `Number of Hits: ${hits.length}`;
   resultsContainer.appendChild(numReferences);
 
   // Create table and table headers
@@ -85,7 +86,7 @@ function displayResults(hits) {
   thead.className = 'bg-gray-50';
   const trHead = document.createElement('tr');
   const th = document.createElement('th');
-  th.textContent = 'Reference Catalogue';
+  th.textContent = attributeName;
   th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
   trHead.appendChild(th);
   thead.appendChild(trHead);
@@ -98,7 +99,7 @@ function displayResults(hits) {
     const tr = document.createElement('tr');
     const td = document.createElement('td');
     td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500';
-    td.textContent = hit.reference_catalogue; // Displaying reference_catalogue attribute
+    td.textContent = hit[attributeName] || '(empty)'; // Display attribute dynamically
     tr.appendChild(td);
     tbody.appendChild(tr);
   });
@@ -116,7 +117,7 @@ function displayResults(hits) {
     downloadButton.className = 'mt-4 mb-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition ease-in-out duration-150';
     resultsContainer.appendChild(downloadButton);
   }
-  downloadButton.onclick = () => downloadCSV(hits.filter(hit => hit.reference_catalogue));
+  downloadButton.onclick = () => downloadCSV(hits, attributeName);
 
   // Append the results container to the body
   document.body.appendChild(resultsContainer);
@@ -126,18 +127,18 @@ function displayResults(hits) {
 }
 
 
-function downloadCSV(hits) {
+function downloadCSV(hits, attributeName) {
   try {
     // Get the current date and time
     const now = new Date();
     const dateString = now.toISOString().split('T')[0]; // YYYY-MM-DD format
     const timeString = now.toTimeString().split(' ')[0].replace(/:/g, '-'); // HH-MM-SS format
-    const ruleContext = document.getElementById('rule-context').value; // Get the context from the form
-    const filename = `References_${dateString}_${timeString}_${ruleContext}.csv`;
+    const ruleContext = document.getElementById('rule-context').value || 'no-context';
+    const filename = `algolia_export_${attributeName}_${dateString}_${timeString}_${ruleContext}.csv`;
 
     // Generate CSV content
-    const csvContent = "data:text/csv;charset=utf-8," + hits.map(e => 
-      `"${e.reference_catalogue}"` // Assuming reference_catalogue is the required data
+    const csvContent = "data:text/csv;charset=utf-8," + hits.map(e =>
+      `"${e[attributeName] || ''}"`
     ).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -161,8 +162,11 @@ function downloadCSV(hits) {
     <div class="max-w-md w-full space-y-8">
         <div>
             <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                Enter Algolia Configuration
+                Algolia Index CSV Extractor
             </h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                Export index hits to CSV with optional rule context
+            </p>
         </div>
         <form class="mt-8 space-y-6" id="algolia-form">
             <input type="hidden" name="remember" value="true">
@@ -180,8 +184,12 @@ function downloadCSV(hits) {
                     <input id="index-name" name="index_name" type="text" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Index Name">
                 </div>
                 <div>
-                    <label for="rule-context" class="sr-only">Rule Context</label>
-                    <input id="rule-context" name="rule_context" type="text" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Rule Context">
+                    <label for="rule-context" class="sr-only">Rule Context (optional)</label>
+                    <input id="rule-context" name="rule_context" type="text" class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Rule Context (optional)">
+                </div>
+                <div>
+                    <label for="attribute-name" class="sr-only">Attribute to Extract</label>
+                    <input id="attribute-name" name="attribute_name" type="text" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Attribute to extract (e.g., objectID, name, sku)">
                 </div>
             </div>
 
