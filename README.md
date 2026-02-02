@@ -1,8 +1,8 @@
-# Algolia Index CSV Extractor
+# Algolia Attribute Exporter
 
-Export Algolia index hits to CSV with empty query and optional rule context.
+Extract a single attribute from Algolia index hits and export to CSV.
 
-**🔗 Tool:** [emirbelkahia.com/algolia-index-csv-extractor](http://emirbelkahia.com/algolia-index-csv-extractor/)
+**🔗 Tool:** [emirbelkahia.com/algolia-attribute-exporter](http://emirbelkahia.com/algolia-attribute-exporter/)
 
 ## What it does
 
@@ -24,7 +24,7 @@ This web-based tool performs an empty query (`""`) on an Algolia index and extra
 
 ## How to Use
 
-1. **Access the tool:** Visit [emirbelkahia.com/algolia-index-csv-extractor](http://emirbelkahia.com/algolia-index-csv-extractor/)
+1. **Access the tool:** Visit [emirbelkahia.com/algolia-attribute-exporter](http://emirbelkahia.com/algolia-attribute-exporter/)
 
 2. **Enter credentials:**
    - Algolia Application ID
