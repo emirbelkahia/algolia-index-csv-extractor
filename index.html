@@ -142,15 +142,36 @@ function displayResults(hits, attributeName) {
 
   const resultsContainer = document.createElement('div');
   resultsContainer.id = 'results-container';
-  resultsContainer.className = 'flex flex-col items-center justify-center w-full mt-8';
+  resultsContainer.className = 'flex flex-col items-center justify-center w-full mt-8 max-w-4xl mx-auto px-4';
+
+  // Header with count and download button
+  const header = document.createElement('div');
+  header.className = 'w-full bg-white shadow rounded-lg p-6 mb-4';
 
   const numReferences = document.createElement('div');
-  numReferences.className = 'text-lg font-semibold my-4';
-  numReferences.textContent = `Number of Hits: ${hits.length}`;
-  resultsContainer.appendChild(numReferences);
+  numReferences.className = 'text-lg font-semibold mb-4';
+  numReferences.textContent = `Total Hits: ${hits.length}`;
+  header.appendChild(numReferences);
+
+  const downloadButton = document.createElement('button');
+  downloadButton.textContent = `Download CSV (${hits.length} rows)`;
+  downloadButton.className = 'w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded focus:outline-none focus:shadow-outline transition ease-in-out duration-150';
+  downloadButton.onclick = () => downloadCSV(hits, attributeName);
+  header.appendChild(downloadButton);
+
+  resultsContainer.appendChild(header);
+
+  // Preview table (limited to 100 rows)
+  const previewLimit = 100;
+  const previewHits = hits.slice(0, previewLimit);
+
+  const previewLabel = document.createElement('div');
+  previewLabel.className = 'w-full text-sm text-gray-600 mb-2';
+  previewLabel.textContent = `Preview (showing first ${previewHits.length} of ${hits.length} results):`;
+  resultsContainer.appendChild(previewLabel);
 
   const table = document.createElement('table');
-  table.className = 'min-w-full divide-y divide-gray-200 shadow overflow-hidden border-b border-gray-200 sm:rounded-lg';
+  table.className = 'w-full divide-y divide-gray-200 shadow overflow-hidden border-b border-gray-200 rounded-lg';
   const thead = document.createElement('thead');
   thead.className = 'bg-gray-50';
   const trHead = document.createElement('tr');
@@ -163,7 +184,7 @@ function displayResults(hits, attributeName) {
 
   const tbody = document.createElement('tbody');
   tbody.className = 'bg-white divide-y divide-gray-200';
-  hits.forEach(hit => {
+  previewHits.forEach(hit => {
     const tr = document.createElement('tr');
     const td = document.createElement('td');
     td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500';
@@ -175,11 +196,12 @@ function displayResults(hits, attributeName) {
 
   resultsContainer.appendChild(table);
 
-  const downloadButton = document.createElement('button');
-  downloadButton.textContent = 'Download CSV';
-  downloadButton.className = 'mt-4 mb-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition ease-in-out duration-150';
-  downloadButton.onclick = () => downloadCSV(hits, attributeName);
-  resultsContainer.appendChild(downloadButton);
+  if (hits.length > previewLimit) {
+    const moreLabel = document.createElement('div');
+    moreLabel.className = 'w-full text-sm text-gray-500 mt-2 text-center';
+    moreLabel.textContent = `... and ${hits.length - previewLimit} more results (download CSV to see all)`;
+    resultsContainer.appendChild(moreLabel);
+  }
 
   document.body.appendChild(resultsContainer);
   resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
