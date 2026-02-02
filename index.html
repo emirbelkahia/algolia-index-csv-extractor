@@ -156,68 +156,41 @@ function downloadCSV(hits, attributeName) {
 
 
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-100 py-8">
 
-<header class="bg-white shadow-sm">
-    <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-        <h1 class="text-2xl font-bold text-gray-900">Algolia Index CSV Extractor</h1>
-        <p class="mt-1 text-sm text-gray-600">
-            Built by <a href="https://www.linkedin.com/in/emirbelkahia/" class="text-indigo-600 hover:text-indigo-500">Emir Belkahia</a>, Customer Success Manager at Algolia, in 2024. Not an official Algolia product.
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="text-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Algolia Index CSV Extractor</h1>
+        <p class="mt-2 text-sm text-gray-600">
+            Built by <a href="https://www.linkedin.com/in/emirbelkahia/" class="text-indigo-600 hover:text-indigo-500">Emir Belkahia</a>, CSM at Algolia (2024). Not an official Algolia product.
         </p>
     </div>
-</header>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
-        <div class="flex">
-            <div class="flex-shrink-0">
-                <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                </svg>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left column: Info boxes -->
+        <div class="lg:col-span-1 space-y-4">
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-3">
+                <h3 class="text-sm font-medium text-blue-800 mb-2">What it does</h3>
+                <p class="text-xs text-blue-700">Extracts <strong>one attribute</strong> (e.g., SKU) from all hits returned by an empty query.</p>
             </div>
-            <div class="ml-3">
-                <h3 class="text-sm font-medium text-blue-800">What this tool does</h3>
-                <div class="mt-2 text-sm text-blue-700">
-                    <p>Performs an <strong>empty query</strong> on your Algolia index and extracts a specific attribute from all returned hits (up to 10,000).</p>
-                    <ul class="list-disc list-inside mt-2 space-y-1">
-                        <li><strong>Extract all SKUs/references</strong> from your catalog</li>
-                        <li><strong>Test rule contexts</strong> (mobile, promo, seasonal) to see which products are promoted</li>
-                        <li><strong>Validate merchandising rules</strong> by checking which hits are returned</li>
-                        <li><strong>Audit data quality</strong> - verify that attributes are populated across your index</li>
-                    </ul>
-                </div>
+
+            <div class="bg-green-50 border-l-4 border-green-400 p-3">
+                <h3 class="text-sm font-medium text-green-800 mb-2">Main use case</h3>
+                <p class="text-xs text-green-700"><strong>Merchandising troubleshooting:</strong> Verify that your complete product offering is indexed for a given rule context (promo, mobile, seasonal).</p>
+            </div>
+
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3">
+                <h3 class="text-sm font-medium text-yellow-800 mb-2">Limitation</h3>
+                <p class="text-xs text-yellow-700">Max 10,000 hits (pagination limit).</p>
             </div>
         </div>
-    </div>
 
-    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-        <div class="flex">
-            <div class="flex-shrink-0">
-                <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                </svg>
-            </div>
-            <div class="ml-3">
-                <h3 class="text-sm font-medium text-yellow-800">Limitations</h3>
-                <div class="mt-2 text-sm text-yellow-700">
-                    <p><strong>10,000 hits maximum</strong> due to Algolia pagination limits. For larger exports, use the Algolia API directly.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="min-h-screen flex items-center justify-center">
-    <div class="max-w-md w-full space-y-8">
-        <div>
-            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                Algolia Index CSV Extractor
-            </h2>
-            <p class="mt-2 text-center text-sm text-gray-600">
-                Export index hits to CSV with optional rule context
-            </p>
-        </div>
-        <form class="mt-8 space-y-6" id="algolia-form">
+        <!-- Right column: Form -->
+        <div class="lg:col-span-2">
+            <div class="bg-white shadow rounded-lg p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Extract attribute to CSV</h2>
+        <form class="space-y-4" id="algolia-form">
             <input type="hidden" name="remember" value="true">
             <div class="rounded-md shadow-sm -space-y-px">
                 <div>
@@ -248,6 +221,8 @@ function downloadCSV(hits, attributeName) {
                 </button>
             </div>
         </form>
+            </div>
+        </div>
     </div>
 </div>
 
